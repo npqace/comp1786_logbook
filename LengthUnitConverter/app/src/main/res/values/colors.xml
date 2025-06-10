@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors - Blue Theme with Different Shades -->
+    <color name="primary_color">#1565C0</color>          <!-- Deep Blue -->
+    <color name="primary_dark">#0D47A1</color>           <!-- Darker Blue -->
+    <color name="primary_light">#42A5F5</color>          <!-- Light Blue -->
+    <color name="accent_color">#2196F3</color>           <!-- Medium Blue -->
+
+    <!-- Background Colors - Blue Themed -->
+    <color name="background_color">#E3F2FD</color>       <!-- Very Light Blue -->
+    <color name="card_background">#FFFFFF</color>        <!-- White -->
+    <color name="result_background">#E8F4FD</color>      <!-- Ultra Light Blue -->
+    <color name="input_background">#F8FBFF</color>       <!-- Off-white with blue tint -->
+    <color name="guidance_background">#E1F5FE</color>    <!-- Light Cyan Blue -->
+    <color name="result_card_background">#E8F5E8</color> <!-- Light Green for result visibility -->
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0F279B</color>           <!-- Dark Blue Text -->
+    <color name="text_secondary">#2B4EBC</color>         <!-- Medium Blue Text -->
+    <color name="text_hint">#343435</color>              <!-- Light Blue Hint -->
+    <color name="text_black">#000000</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <!-- Button Colors -->
+    <color name="button_primary">#1976D2</color>         <!-- Primary Blue Button -->
+    <color name="button_secondary">#BBDEFB</color>       <!-- Light Blue Button -->
+
+    <!-- Status Colors -->
+    <color name="success_color">#4CAF50</color>
+    <color name="error_color">#F44336</color>
+    <color name="warning_color">#FF9800</color>
+</resources>
