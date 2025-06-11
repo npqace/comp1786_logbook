@@ -116,19 +116,33 @@ public class MainActivity extends AppCompatActivity {
         todayTasksContainer.removeAllViews();
         futureTasksContainer.removeAllViews();
 
+        TextView todayTasksHeader = findViewById(R.id.todayTasksHeader);
+        TextView futureTasksHeader = findViewById(R.id.futureTasksHeader);
+
         LocalDate today = LocalDate.now();
 
         // Sort tasks by date (ascending) and then by completion status (incomplete first)
         tasks.sort(Comparator.comparing(Task::getDate)
                 .thenComparing(Task::isCompleted));
 
+        boolean hasTodayTasks = false;
+        boolean hasFutureTasks = false;
+
         for (Task task : tasks) {
             View taskView = createTaskView(task);
             if (task.getDate().equals(today)) {
-                todayTasksContainer.addView(taskView); // Keep adding to container directly for now
+                todayTasksContainer.addView(taskView);
+                hasTodayTasks = true;
             } else if (task.getDate().isAfter(today)) {
-                futureTasksContainer.addView(taskView); // Keep adding to container directly for now
+                futureTasksContainer.addView(taskView);
+                hasFutureTasks = true;
             }
+        }
+        if (todayTasksHeader != null) {
+            todayTasksHeader.setVisibility(hasTodayTasks ? View.VISIBLE : View.GONE);
+        }
+        if (futureTasksHeader != null) {
+            futureTasksHeader.setVisibility(hasFutureTasks ? View.VISIBLE : View.GONE);
         }
     }
 
