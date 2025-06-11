@@ -1,5 +1,6 @@
 package com.example.simpletodolist;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.graphics.Paint;
@@ -14,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -126,7 +128,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private View createTaskView(Task task) {
+    @NonNull
+    private View createTaskView(@NonNull Task task) {
         LinearLayout taskLayout = new LinearLayout(this);
         taskLayout.setOrientation(LinearLayout.HORIZONTAL);
         taskLayout.setPadding(16, 8, 16, 8);
@@ -185,8 +188,15 @@ public class MainActivity extends AppCompatActivity {
         deleteButton.setBackgroundResource(R.drawable.button_delete);
         deleteButton.setTextColor(ContextCompat.getColor(this, android.R.color.white));
         deleteButton.setOnClickListener(v -> {
-            tasks.remove(task);
-            refreshTaskLists();
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.delete_task_title)
+                    .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
+                    .setPositiveButton(R.string.delete_text, (dialog, which) -> {
+                        tasks.remove(task);
+                        refreshTaskLists();
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         });
 
         LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
@@ -205,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         return taskLayout;
     }
 
-    private void updateTaskAppearance(LinearLayout taskLayout, Task task) {
+    private void updateTaskAppearance(@NonNull LinearLayout taskLayout, @NonNull Task task) {
         LinearLayout textLayout = (LinearLayout) taskLayout.getChildAt(1);
         TextView taskNameText = (TextView) textLayout.getChildAt(0);
         TextView taskDateText = (TextView) textLayout.getChildAt(1);
@@ -223,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showEditDialog(Task task) {
+    private void showEditDialog(@NonNull Task task) {
         Dialog editDialog = new Dialog(this);
         editDialog.setContentView(R.layout.dialog_edit_task);
         editDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
