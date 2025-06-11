@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">SimpleTodoList</string>
+    <string name="app_header">Simple Todo List</string>
+    <string name="enter_task_hint">Enter task name:</string>
+    <string name="calendar_desc">Select date:</string>
+    <string name="add_text">Add</string>
+    <string name="today_task">Today\'s Tasks</string>
+    <string name="future_task">Future Tasks</string>
+
+    <string name="edit_header">Edit Task</string>
+    <string name="task_name_text">Task Name</string>
+    <string name="task_date_text">Task Date</string>
+    <string name="cancel_btn">CANCEL</string>
+    <string name="save_btn">SAVE</string>
+</resources>
