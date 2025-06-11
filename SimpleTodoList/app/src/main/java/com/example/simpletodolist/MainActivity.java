@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -117,13 +118,16 @@ public class MainActivity extends AppCompatActivity {
 
         LocalDate today = LocalDate.now();
 
+        // Sort tasks by date (ascending) and then by completion status (incomplete first)
+        tasks.sort(Comparator.comparing(Task::getDate)
+                .thenComparing(Task::isCompleted));
+
         for (Task task : tasks) {
             View taskView = createTaskView(task);
-
             if (task.getDate().equals(today)) {
-                todayTasksContainer.addView(taskView);
+                todayTasksContainer.addView(taskView); // Keep adding to container directly for now
             } else if (task.getDate().isAfter(today)) {
-                futureTasksContainer.addView(taskView);
+                futureTasksContainer.addView(taskView); // Keep adding to container directly for now
             }
         }
     }
@@ -187,17 +191,15 @@ public class MainActivity extends AppCompatActivity {
         deleteButton.setText(R.string.delete_text);
         deleteButton.setBackgroundResource(R.drawable.button_delete);
         deleteButton.setTextColor(ContextCompat.getColor(this, android.R.color.white));
-        deleteButton.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.delete_task_title)
-                    .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
-                    .setPositiveButton(R.string.delete_text, (dialog, which) -> {
-                        tasks.remove(task);
-                        refreshTaskLists();
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
-        });
+        deleteButton.setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle(R.string.delete_task_title)
+                .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
+                .setPositiveButton(R.string.delete_text, (dialog, which) -> {
+                    tasks.remove(task);
+                    refreshTaskLists();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show());
 
         LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
