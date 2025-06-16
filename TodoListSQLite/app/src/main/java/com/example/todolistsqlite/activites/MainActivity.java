@@ -1,4 +1,4 @@
-package com.example.todolistsqlite;
+package com.example.todolistsqlite.activites;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -20,6 +20,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.example.todolistsqlite.database.AppDatabase;
+import com.example.todolistsqlite.R;
+import com.example.todolistsqlite.models.Task;
+import com.example.todolistsqlite.dao.TaskDao;
 import com.google.android.material.tabs.TabLayout;
 
 import java.time.LocalDate;
@@ -43,10 +47,16 @@ public class MainActivity extends AppCompatActivity {
     private LocalDate selectedDate;
     private DateTimeFormatter dateFormat;
 
+    // Obtain Room database DAO
+    private TaskDao taskDao;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Obtain Room database DAO
+        taskDao = AppDatabase.getInstance(this).taskDao();
 
         initializeViews();
         initializeData();
@@ -69,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeData() {
-        tasks = new ArrayList<>();
+        // Load tasks that were persisted previously
+        tasks = new ArrayList<>(taskDao.getAll());
         selectedDate = null; // Initialize selectedDate as null
         dateFormat = DateTimeFormatter.ofPattern("dd MMM, yyyy");
     }
@@ -94,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         // Set minimum date to today (prevent selecting past dates)
-//        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
 
         datePickerDialog.show();
     }
@@ -116,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
                 taskDate = LocalDate.now(); // Default to today if no date is selected
             }
             Task newTask = new Task(taskName, taskDate);
+            long id = taskDao.insert(newTask);
+            newTask.setId(id);
             tasks.add(newTask);
             taskNameInput.setText("");
             selectedDate = null; // Reset selectedDate after adding a task
@@ -198,6 +211,7 @@ public class MainActivity extends AppCompatActivity {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             task.setCompleted(isChecked);
             updateTaskAppearance(taskLayout, task);
+            taskDao.update(task);
         });
 
         // Edit button behaviour
@@ -209,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
                 .setPositiveButton(R.string.delete_text, (dialog, which) -> {
                     tasks.remove(task);
+                    taskDao.delete(task);
                     if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
                         refreshTaskLists();
                     } else {
@@ -279,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 );
                 task.setDate(newDate);
 
+                taskDao.update(task);
                 if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
                     refreshTaskLists();
                 } else {
@@ -345,4 +361,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    // Room handles DB closing automatically; nothing to close
 }
