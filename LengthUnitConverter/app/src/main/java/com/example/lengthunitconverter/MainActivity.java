@@ -1,24 +1,20 @@
 package com.example.lengthunitconverter;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
-import com.example.lengthunitconverter.R;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.DecimalFormat;
 
@@ -29,8 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonClear;
     private TextView textViewResultValue;
 
-    private String[] units = {"m", "mm", "mi", "ft"};
-    private String[] unitNames = {"Metre", "Millimetre", "Mile", "Foot"};
+    private final String[] units = {"m", "mm", "mi", "ft"};
+    private final String[] unitNames = {"Metre", "Millimetre", "Mile", "Foot"};
     private String fromUnit = "m";
     private String toUnit = "mm";
 
@@ -59,17 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupSpinners() {
         // Create custom adapter for unit abbreviations
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, units) {
-            @Override
-            public View getDropDownView(int position, View convertView, android.view.ViewGroup parent) {
-                View view = super.getDropDownView(position, convertView, parent);
-                TextView textView = (TextView) view;
-                textView.setText(unitNames[position] + " (" + units[position] + ")");
-                return view;
-            }
-        };
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> adapter = getStringArrayAdapter();
 
         spinnerFromUnit.setAdapter(adapter);
         spinnerToUnit.setAdapter(adapter);
@@ -97,6 +83,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @NonNull
+    private ArrayAdapter<String> getStringArrayAdapter() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, units) {
+            @Override
+            public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView textView = (TextView) view;
+                textView.setText(String.format("%s (%s)", unitNames[position], units[position]));
+                return view;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        return adapter;
+    }
+
     private void setupTextWatcher() {
         editTextInput.addTextChangedListener(new TextWatcher() {
             @Override
@@ -117,12 +119,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupButtonListeners() {
-        buttonClear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                clearAll();
-            }
-        });
+        buttonClear.setOnClickListener(v -> clearAll());
     }
 
     private void performConversion() {
@@ -145,15 +142,10 @@ public class MainActivity extends AppCompatActivity {
 
             // Display result with appropriate formatting
             DecimalFormat df = new DecimalFormat("#.######");
-            String formattedInput = df.format(inputValue);
             String formattedResult = df.format(result);
 
             // Update result value display
             textViewResultValue.setText(formattedResult);
-
-            // Update result card
-            String resultText = String.format("%s %s = %s %s",
-                    formattedInput, fromUnit, formattedResult, toUnit);
 
         } catch (NumberFormatException e) {
             textViewResultValue.setText("0");
