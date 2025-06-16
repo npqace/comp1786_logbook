@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -148,63 +149,32 @@ public class MainActivity extends AppCompatActivity {
 
     @NonNull
     private View createTaskView(@NonNull Task task) {
-        LinearLayout taskLayout = new LinearLayout(this);
-        taskLayout.setOrientation(LinearLayout.HORIZONTAL);
-        taskLayout.setPadding(16, 8, 16, 8);
+        // Inflate the reusable task item layout instead of creating the view programmatically
+        LayoutInflater inflater = LayoutInflater.from(this);
+        LinearLayout taskLayout = (LinearLayout) inflater.inflate(R.layout.item_task, null);
 
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layoutParams.setMargins(0, 4, 0, 4);
-        taskLayout.setLayoutParams(layoutParams);
+        // Bind views
+        CheckBox checkBox = taskLayout.findViewById(R.id.taskCheckBox);
+        TextView taskNameText = taskLayout.findViewById(R.id.taskNameText);
+        TextView taskDateText = taskLayout.findViewById(R.id.taskDateText);
+        Button editButton = taskLayout.findViewById(R.id.editButton);
+        Button deleteButton = taskLayout.findViewById(R.id.deleteButton);
 
-        // Checkbox
-        CheckBox checkBox = new CheckBox(this);
+        // Initialise values
+        taskNameText.setText(task.getName());
+        taskDateText.setText(task.getDate().format(dateFormat));
+
+        // Checkbox behaviour
         checkBox.setChecked(task.isCompleted());
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             task.setCompleted(isChecked);
             updateTaskAppearance(taskLayout, task);
         });
 
-        // Task name and date
-        LinearLayout textLayout = new LinearLayout(this);
-        textLayout.setOrientation(LinearLayout.VERTICAL);
-        textLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-
-        TextView taskNameText = new TextView(this);
-        taskNameText.setText(task.getName());
-        taskNameText.setTextSize(16);
-        taskNameText.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-
-        TextView taskDateText = new TextView(this);
-        taskDateText.setText(task.getDate().format(dateFormat));
-        taskDateText.setTextSize(12);
-        taskDateText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
-
-        textLayout.addView(taskNameText);
-        textLayout.addView(taskDateText);
-
-        // Edit button
-        Button editButton = new Button(this);
-        editButton.setText(R.string.edit_text);
-        editButton.setBackgroundResource(R.drawable.button_edit);
-        editButton.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        // Edit button behaviour
         editButton.setOnClickListener(v -> showEditDialog(task));
 
-        LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        editParams.setMargins(8, 0, 8, 0);
-        editButton.setLayoutParams(editParams);
-
-        // Delete button
-        Button deleteButton = new Button(this);
-        deleteButton.setText(R.string.delete_text);
-        deleteButton.setBackgroundResource(R.drawable.button_delete);
-        deleteButton.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        // Delete button behaviour
         deleteButton.setOnClickListener(v -> new AlertDialog.Builder(this)
                 .setTitle(R.string.delete_task_title)
                 .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
@@ -215,17 +185,7 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null)
                 .show());
 
-        LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        deleteButton.setLayoutParams(deleteParams);
-
-        taskLayout.addView(checkBox);
-        taskLayout.addView(textLayout);
-        taskLayout.addView(editButton);
-        taskLayout.addView(deleteButton);
-
+        // Apply strikethrough / alpha styling depending on completion status
         updateTaskAppearance(taskLayout, task);
 
         return taskLayout;
