@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
         TextView historyTitle = historyEmptyState.findViewById(R.id.emptyStateTitle);
         TextView historyMessage = historyEmptyState.findViewById(R.id.emptyStateMessage);
         historyTitle.setText(R.string.empty_history_title);
-        historyMessage.setText(R.string.empty_history_message);
     }
 
     private void initializeData() {
@@ -257,20 +256,28 @@ public class MainActivity extends AppCompatActivity {
         editButton.setOnClickListener(v -> showEditDialog(task));
 
         // Delete button behaviour
-        deleteButton.setOnClickListener(v -> new AlertDialog.Builder(this)
-                .setTitle(R.string.delete_task_title)
-                .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
-                .setPositiveButton(R.string.delete_text, (dialog, which) -> {
-                    tasks.remove(task);
-                    taskDao.delete(task);
-                    if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
-                        refreshTaskLists();
-                    } else {
-                        refreshLogList();
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show());
+        deleteButton.setOnClickListener(v -> {
+            AlertDialog deleteDialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.delete_task_title)
+                    .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
+                    .setPositiveButton(R.string.delete_text, (dialog, which) -> {
+                        tasks.remove(task);
+                        taskDao.delete(task);
+                        if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
+                            refreshTaskLists();
+                        } else {
+                            refreshLogList();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+            
+            deleteDialog.show();
+            
+            // Set delete button text color to red
+            deleteDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                    .setTextColor(ContextCompat.getColor(this, R.color.delete_red));
+        });
 
         // Apply strikethrough / alpha styling depending on completion status
         updateTaskAppearance(taskLayout, task);

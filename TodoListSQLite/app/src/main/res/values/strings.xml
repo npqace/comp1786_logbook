@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TodoListSQLite</string>
     <string name="app_header">Simple Todo List</string>
-    <string name="enter_task_hint">Enter task name:</string>
+    <string name="enter_task_hint">Enter task name</string>
     <string name="calendar_desc">Select date:</string>
     <string name="add_text">Add</string>
     <string name="edit_text">Edit</string>
@@ -25,5 +25,4 @@
     <string name="empty_main_title">No tasks created</string>
     <string name="empty_main_message">Add a new task to get started</string>
     <string name="empty_history_title">History empty</string>
-    <string name="empty_history_message"></string>
 </resources>
