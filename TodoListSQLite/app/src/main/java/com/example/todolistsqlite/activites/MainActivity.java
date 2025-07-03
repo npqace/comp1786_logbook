@@ -1,9 +1,8 @@
-package com.example.simpletodolist;
+package com.example.todolistsqlite.activites;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -21,6 +20,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.example.todolistsqlite.database.AppDatabase;
+import com.example.todolistsqlite.R;
+import com.example.todolistsqlite.models.Task;
+import com.example.todolistsqlite.dao.TaskDao;
+import com.google.android.material.tabs.TabLayout;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,20 +39,35 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout todayTasksContainer;
     private LinearLayout futureTasksContainer;
     private TextView selectedDateText;
-    private LinearLayout emptyStateContainer;
+    private TabLayout tabLayout;
+    private LinearLayout logContainer;
+    private LinearLayout addTaskSection;
+    
+    // Empty state views
+    private View mainEmptyState;
+    private View historyEmptyState;
 
     private List<Task> tasks;
     private LocalDate selectedDate;
     private DateTimeFormatter dateFormat;
+
+    // Obtain Room database DAO
+    private TaskDao taskDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Obtain Room database DAO
+        taskDao = AppDatabase.getInstance(this).taskDao();
+
         initializeViews();
         initializeData();
         setupEventListeners();
+
+        // Refresh lists initially so Log tab has content
+        refreshTaskLists();
     }
 
     private void initializeViews() {
@@ -57,11 +77,34 @@ public class MainActivity extends AppCompatActivity {
         todayTasksContainer = findViewById(R.id.todayTasksContainer);
         futureTasksContainer = findViewById(R.id.futureTasksContainer);
         selectedDateText = findViewById(R.id.selectedDateText);
-        emptyStateContainer = findViewById(R.id.emptyStateContainer);
+        addTaskSection = findViewById(R.id.addTaskSection);
+        logContainer = findViewById(R.id.logContainer);
+        tabLayout = findViewById(R.id.tabLayout);
+        
+        // Initialize empty state views
+        createEmptyStateViews();
+    }
+
+    private void createEmptyStateViews() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        
+        // Create empty state for main page (when no tasks exist at all)
+        mainEmptyState = inflater.inflate(R.layout.empty_state_view, null);
+        TextView mainTitle = mainEmptyState.findViewById(R.id.emptyStateTitle);
+        TextView mainMessage = mainEmptyState.findViewById(R.id.emptyStateMessage);
+        mainTitle.setText(R.string.empty_main_title);
+        mainMessage.setText(R.string.empty_main_message);
+        
+        // Create empty state for history
+        historyEmptyState = inflater.inflate(R.layout.empty_state_view, null);
+        TextView historyTitle = historyEmptyState.findViewById(R.id.emptyStateTitle);
+        TextView historyMessage = historyEmptyState.findViewById(R.id.emptyStateMessage);
+        historyTitle.setText(R.string.empty_history_title);
     }
 
     private void initializeData() {
-        tasks = new ArrayList<>();
+        // Load tasks that were persisted previously
+        tasks = new ArrayList<>(taskDao.getAll());
         selectedDate = null; // Initialize selectedDate as null
         dateFormat = DateTimeFormatter.ofPattern("dd MMM, yyyy");
     }
@@ -69,15 +112,16 @@ public class MainActivity extends AppCompatActivity {
     private void setupEventListeners() {
         datePickerBtn.setOnClickListener(v -> showDatePicker());
         addTaskBtn.setOnClickListener(v -> addTask());
+        setupTabLayout();
     }
 
     private void showDatePicker() {
         LocalDate initialDate = selectedDate != null ? selectedDate : LocalDate.now();
         DatePickerDialog datePickerDialog = new DatePickerDialog(
-          this,
+                this,
                 (DatePicker view, int year, int month, int dayOfMonth) -> {
-              selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
-              updateSelectedDateText();
+                    selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
+                    updateSelectedDateText();
                 },
                 initialDate.getYear(),
                 initialDate.getMonthValue() - 1,
@@ -93,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         if (selectedDate != null) {
             selectedDateText.setText(selectedDate.format(dateFormat));
         } else {
-            selectedDateText.setText(""); 
+            selectedDateText.setText("");
         }
     }
 
@@ -107,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
                 taskDate = LocalDate.now(); // Default to today if no date is selected
             }
             Task newTask = new Task(taskName, taskDate);
+            long id = taskDao.insert(newTask);
+            newTask.setId(id);
             tasks.add(newTask);
             taskNameInput.setText("");
             selectedDate = null; // Reset selectedDate after adding a task
@@ -132,12 +178,25 @@ public class MainActivity extends AppCompatActivity {
         boolean hasTodayTasks = false;
         boolean hasFutureTasks = false;
 
+        LocalDate lastFutureDate = null;
+
         for (Task task : tasks) {
-            View taskView = createTaskView(task);
             if (task.getDate().equals(today)) {
+                View taskView = createTaskView(task);
                 todayTasksContainer.addView(taskView);
                 hasTodayTasks = true;
             } else if (task.getDate().isAfter(today)) {
+                // Add date header if this is a new date group
+                if (lastFutureDate == null || !lastFutureDate.equals(task.getDate())) {
+                    TextView dateHeader = new TextView(this);
+                    dateHeader.setText(task.getDate().format(dateFormat));
+                    dateHeader.setTextSize(18);
+                    dateHeader.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+                    dateHeader.setPadding(0, 16, 0, 8);
+                    futureTasksContainer.addView(dateHeader);
+                    lastFutureDate = task.getDate();
+                }
+                View taskView = createTaskView(task);
                 futureTasksContainer.addView(taskView);
                 hasFutureTasks = true;
             }
@@ -148,10 +207,24 @@ public class MainActivity extends AppCompatActivity {
         if (futureTasksHeader != null) {
             futureTasksHeader.setVisibility(hasFutureTasks ? View.VISIBLE : View.GONE);
         }
+        
+        // Show/hide empty states
+        updateEmptyStates(hasTodayTasks || hasFutureTasks);
 
-        // Show empty state if no tasks exist
-        boolean hasAnyTasks = !tasks.isEmpty();
-        emptyStateContainer.setVisibility(hasAnyTasks ? View.GONE : View.VISIBLE);
+        if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
+            refreshLogList();
+        }
+    }
+    
+    private void updateEmptyStates(boolean hasAnyTasks) {
+        // Remove existing empty state from containers
+        todayTasksContainer.removeView(mainEmptyState);
+        futureTasksContainer.removeView(mainEmptyState);
+        
+        // Add empty state view if no tasks exist at all
+        if (!hasAnyTasks) {
+            todayTasksContainer.addView(mainEmptyState);
+        }
     }
 
     @NonNull
@@ -176,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             task.setCompleted(isChecked);
             updateTaskAppearance(taskLayout, task);
+            taskDao.update(task);
         });
 
         // Edit button behaviour
@@ -183,18 +257,26 @@ public class MainActivity extends AppCompatActivity {
 
         // Delete button behaviour
         deleteButton.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder
-                .setTitle(R.string.delete_task_title)
-                .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
-                .setPositiveButton(R.string.delete_text, (dialog, which) -> {
-                    tasks.remove(task);
-                    refreshTaskLists();
-                })
-                .setNegativeButton(android.R.string.cancel, null);
-            AlertDialog dialog = builder.create();
-            dialog.setOnShowListener(dialogInterface -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED));
-            dialog.show();
+            AlertDialog deleteDialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.delete_task_title)
+                    .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
+                    .setPositiveButton(R.string.delete_text, (dialog, which) -> {
+                        tasks.remove(task);
+                        taskDao.delete(task);
+                        if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
+                            refreshTaskLists();
+                        } else {
+                            refreshLogList();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+            
+            deleteDialog.show();
+            
+            // Set delete button text color to red
+            deleteDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                    .setTextColor(ContextCompat.getColor(this, R.color.delete_red));
         });
 
         // Apply strikethrough / alpha styling depending on completion status
@@ -258,10 +340,86 @@ public class MainActivity extends AppCompatActivity {
                 );
                 task.setDate(newDate);
 
-                refreshTaskLists();
+                taskDao.update(task);
+                if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
+                    refreshTaskLists();
+                } else {
+                    refreshLogList();
+                }
                 editDialog.dismiss();
             }
         });
         editDialog.show();
     }
+
+    private void setupTabLayout() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                boolean isMain = (tab.getPosition() == 0);
+
+                // Toggle visibility of sections
+                addTaskSection.setVisibility(isMain ? View.VISIBLE : View.GONE);
+                todayTasksContainer.setVisibility(isMain ? View.VISIBLE : View.GONE);
+                futureTasksContainer.setVisibility(isMain ? View.VISIBLE : View.GONE);
+                logContainer.setVisibility(isMain ? View.GONE : View.VISIBLE);
+                
+                // Remove empty states from containers when switching tabs to prevent duplication
+                if (!isMain) {
+                    todayTasksContainer.removeView(mainEmptyState);
+                    futureTasksContainer.removeView(mainEmptyState);
+                } else {
+                    logContainer.removeView(historyEmptyState);
+                }
+
+                if (isMain) {
+                    // Ensure headers show/hide correctly based on current tasks
+                    refreshTaskLists();
+                } else {
+                    // Always hide headers in History tab
+                    findViewById(R.id.todayTasksHeader).setVisibility(View.GONE);
+                    findViewById(R.id.futureTasksHeader).setVisibility(View.GONE);
+                    refreshLogList();
+                }
+            }
+
+            @Override public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
+        });
+    }
+
+    private void refreshLogList() {
+        if (logContainer == null) return;
+        logContainer.removeAllViews();
+
+        LocalDate today = LocalDate.now();
+
+        java.util.Map<java.time.LocalDate, java.util.List<Task>> map = new java.util.TreeMap<>((d1, d2) -> d2.compareTo(d1));
+        for (Task task : tasks) {
+            if (task.getDate().isBefore(today)) { // Only past tasks
+                map.computeIfAbsent(task.getDate(), k -> new java.util.ArrayList<>()).add(task);
+            }
+        }
+
+        if (map.isEmpty()) {
+            // Show empty state for history
+            logContainer.addView(historyEmptyState);
+        } else {
+            for (java.util.Map.Entry<java.time.LocalDate, java.util.List<Task>> entry : map.entrySet()) {
+                TextView dateHeader = new TextView(this);
+                dateHeader.setText(entry.getKey().format(dateFormat));
+                dateHeader.setTextSize(18);
+                dateHeader.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+                dateHeader.setPadding(0, 16, 0, 8);
+                logContainer.addView(dateHeader);
+
+                for (Task task : entry.getValue()) {
+                    View taskView = createTaskView(task);
+                    logContainer.addView(taskView);
+                }
+            }
+        }
+    }
+
+    // Room handles DB closing automatically; nothing to close
 }

@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".activites.MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,10 +28,35 @@
                 android:textStyle="bold"
                 android:textColor="@color/primary_blue"
                 android:gravity="center"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="12dp" />
+
+            <!-- Tab Layout -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:layout_marginBottom="12dp"
+                app:tabIndicatorColor="@color/primary_blue"
+                app:tabSelectedTextColor="@color/primary_blue"
+                app:tabTextColor="@color/text_secondary">
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/tabMain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tab_main" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/tabLog"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tab_log" />
+            </com.google.android.material.tabs.TabLayout>
 
             <!-- Add Task Section -->
             <LinearLayout
+                android:id="@+id/addTaskSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -134,34 +159,12 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
-            <!-- Empty State -->
             <LinearLayout
-                android:id="@+id/emptyStateContainer"
+                android:id="@+id/logContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginTop="48dp"
-                android:visibility="visible">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/empty_state_title"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/empty_state_subtitle"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center" />
-
-            </LinearLayout>
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
