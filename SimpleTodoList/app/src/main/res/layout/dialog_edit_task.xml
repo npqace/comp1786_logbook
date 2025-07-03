@@ -79,7 +79,7 @@
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground"
                 android:text="@string/save_btn"
-                android:textColor="@color/primary_blue" />
+                android:textColor="@color/edit_green" />
 
         </LinearLayout>
 

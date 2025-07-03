@@ -3,6 +3,7 @@ package com.example.simpletodolist;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout todayTasksContainer;
     private LinearLayout futureTasksContainer;
     private TextView selectedDateText;
+    private LinearLayout emptyStateContainer;
 
     private List<Task> tasks;
     private LocalDate selectedDate;
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         todayTasksContainer = findViewById(R.id.todayTasksContainer);
         futureTasksContainer = findViewById(R.id.futureTasksContainer);
         selectedDateText = findViewById(R.id.selectedDateText);
+        emptyStateContainer = findViewById(R.id.emptyStateContainer);
     }
 
     private void initializeData() {
@@ -145,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
         if (futureTasksHeader != null) {
             futureTasksHeader.setVisibility(hasFutureTasks ? View.VISIBLE : View.GONE);
         }
+
+        // Show empty state if no tasks exist
+        boolean hasAnyTasks = !tasks.isEmpty();
+        emptyStateContainer.setVisibility(hasAnyTasks ? View.GONE : View.VISIBLE);
     }
 
     @NonNull
@@ -175,15 +182,20 @@ public class MainActivity extends AppCompatActivity {
         editButton.setOnClickListener(v -> showEditDialog(task));
 
         // Delete button behaviour
-        deleteButton.setOnClickListener(v -> new AlertDialog.Builder(this)
+        deleteButton.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder
                 .setTitle(R.string.delete_task_title)
                 .setMessage(getString(R.string.delete_task_confirmation) + " \"" + task.getName() + "\"?")
                 .setPositiveButton(R.string.delete_text, (dialog, which) -> {
                     tasks.remove(task);
                     refreshTaskLists();
                 })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show());
+                .setNegativeButton(android.R.string.cancel, null);
+            AlertDialog dialog = builder.create();
+            dialog.setOnShowListener(dialogInterface -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED));
+            dialog.show();
+        });
 
         // Apply strikethrough / alpha styling depending on completion status
         updateTaskAppearance(taskLayout, task);
