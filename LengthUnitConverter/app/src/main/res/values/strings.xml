@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Length Converter</string>
+    <string name="edit_text_hint">Enter value</string>
+    <string name="equal_symbol">=</string>
+    <string name="zero">0</string>
+    <string name="error_cannot_be_empty">Input cannot be empty</string>
+    <string name="m_to_mm">1 m = 1000 mm</string>
+    <string name="m_to_mile">1 m = 0.000621 mile</string>
+    <string name="m_to_foot">1 m = 3.28084 foot</string>
+    <string name="clear_all_txt">Clear All</string>
+    <string name="guidance_title">Conversion Guide</string>
+
+    <string-array name="length_units">
+        <item>Metre</item>
+        <item>Millimetre</item>
+        <item>Mile</item>
+        <item>Foot</item>
+    </string-array>
+</resources>
