@@ -42,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private LinearLayout logContainer;
     private LinearLayout addTaskSection;
+    
+    // Empty state views
+    private View mainEmptyState;
+    private View historyEmptyState;
 
     private List<Task> tasks;
     private LocalDate selectedDate;
@@ -76,6 +80,27 @@ public class MainActivity extends AppCompatActivity {
         addTaskSection = findViewById(R.id.addTaskSection);
         logContainer = findViewById(R.id.logContainer);
         tabLayout = findViewById(R.id.tabLayout);
+        
+        // Initialize empty state views
+        createEmptyStateViews();
+    }
+
+    private void createEmptyStateViews() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        
+        // Create empty state for main page (when no tasks exist at all)
+        mainEmptyState = inflater.inflate(R.layout.empty_state_view, null);
+        TextView mainTitle = mainEmptyState.findViewById(R.id.emptyStateTitle);
+        TextView mainMessage = mainEmptyState.findViewById(R.id.emptyStateMessage);
+        mainTitle.setText(R.string.empty_main_title);
+        mainMessage.setText(R.string.empty_main_message);
+        
+        // Create empty state for history
+        historyEmptyState = inflater.inflate(R.layout.empty_state_view, null);
+        TextView historyTitle = historyEmptyState.findViewById(R.id.emptyStateTitle);
+        TextView historyMessage = historyEmptyState.findViewById(R.id.emptyStateMessage);
+        historyTitle.setText(R.string.empty_history_title);
+        historyMessage.setText(R.string.empty_history_message);
     }
 
     private void initializeData() {
@@ -183,9 +208,23 @@ public class MainActivity extends AppCompatActivity {
         if (futureTasksHeader != null) {
             futureTasksHeader.setVisibility(hasFutureTasks ? View.VISIBLE : View.GONE);
         }
+        
+        // Show/hide empty states
+        updateEmptyStates(hasTodayTasks || hasFutureTasks);
 
         if (tabLayout != null && tabLayout.getSelectedTabPosition() == 0) {
             refreshLogList();
+        }
+    }
+    
+    private void updateEmptyStates(boolean hasAnyTasks) {
+        // Remove existing empty state from containers
+        todayTasksContainer.removeView(mainEmptyState);
+        futureTasksContainer.removeView(mainEmptyState);
+        
+        // Add empty state view if no tasks exist at all
+        if (!hasAnyTasks) {
+            todayTasksContainer.addView(mainEmptyState);
         }
     }
 
@@ -317,6 +356,14 @@ public class MainActivity extends AppCompatActivity {
                 todayTasksContainer.setVisibility(isMain ? View.VISIBLE : View.GONE);
                 futureTasksContainer.setVisibility(isMain ? View.VISIBLE : View.GONE);
                 logContainer.setVisibility(isMain ? View.GONE : View.VISIBLE);
+                
+                // Remove empty states from containers when switching tabs to prevent duplication
+                if (!isMain) {
+                    todayTasksContainer.removeView(mainEmptyState);
+                    futureTasksContainer.removeView(mainEmptyState);
+                } else {
+                    logContainer.removeView(historyEmptyState);
+                }
 
                 if (isMain) {
                     // Ensure headers show/hide correctly based on current tasks
@@ -347,17 +394,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        for (java.util.Map.Entry<java.time.LocalDate, java.util.List<Task>> entry : map.entrySet()) {
-            TextView dateHeader = new TextView(this);
-            dateHeader.setText(entry.getKey().format(dateFormat));
-            dateHeader.setTextSize(18);
-            dateHeader.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
-            dateHeader.setPadding(0, 16, 0, 8);
-            logContainer.addView(dateHeader);
+        if (map.isEmpty()) {
+            // Show empty state for history
+            logContainer.addView(historyEmptyState);
+        } else {
+            for (java.util.Map.Entry<java.time.LocalDate, java.util.List<Task>> entry : map.entrySet()) {
+                TextView dateHeader = new TextView(this);
+                dateHeader.setText(entry.getKey().format(dateFormat));
+                dateHeader.setTextSize(18);
+                dateHeader.setTextColor(ContextCompat.getColor(this, R.color.primary_blue));
+                dateHeader.setPadding(0, 16, 0, 8);
+                logContainer.addView(dateHeader);
 
-            for (Task task : entry.getValue()) {
-                View taskView = createTaskView(task);
-                logContainer.addView(taskView);
+                for (Task task : entry.getValue()) {
+                    View taskView = createTaskView(task);
+                    logContainer.addView(taskView);
+                }
             }
         }
     }

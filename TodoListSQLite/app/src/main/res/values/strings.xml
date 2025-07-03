@@ -20,4 +20,10 @@
 
     <string name="tab_main">Main</string>
     <string name="tab_log">History</string>
+    
+    <!-- Empty State Messages -->
+    <string name="empty_main_title">No tasks created</string>
+    <string name="empty_main_message">Add a new task to get started</string>
+    <string name="empty_history_title">History empty</string>
+    <string name="empty_history_message"></string>
 </resources>
